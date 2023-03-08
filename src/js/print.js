@@ -10,7 +10,11 @@ const Print = {
     const iframeElement = document.getElementById(params.frameId)
 
     // Wait for iframe to load all content
-    iframeElement.onload = () => {
+    iframeElement.onload = function () {
+      this.contentWindow.addEventListener('afterprint', () => {
+        this.contentWindow.top.postMessage({ onPrintDialogClose: true }, this.contentWindow.top.location.origin)
+      })
+
       if (params.type === 'pdf') {
         // Add a delay for Firefox. In my tests, 1000ms was sufficient but 100ms was not
         if (Browser.isFirefox() && Browser.getFirefoxMajorVersion() < 110) {
@@ -51,12 +55,18 @@ const Print = {
 }
 
 function handleCloseMessage(params) {
-  window.addEventListener('message', function (e) {
+  function receiveMessage(e) {
+    window.removeEventListener('message', receiveMessage, false)
+    
     const origin = e.origin
     if (origin !== window.location.origin) return
     if (!e.data.onPrintDialogClose) return
+
     params.onPrintDialogClose()
-  }, false)
+  }
+  if (params.type === 'html') {
+    window.addEventListener('message', receiveMessage, false)
+  }
 }
 
 function performPrint(iframeElement, params) {

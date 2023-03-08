@@ -107,7 +107,9 @@ export function cleanUp (params) {
     // Make sure the event only happens once.
     window.removeEventListener(event, handler)
 
-    // params.onPrintDialogClose()
+    if (params.type !== 'html') {
+      params.onPrintDialogClose()
+    }
 
     // Remove iframe from the DOM
     const iframe = document.getElementById(params.frameId)
