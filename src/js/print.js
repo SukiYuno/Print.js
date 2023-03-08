@@ -50,7 +50,17 @@ const Print = {
   }
 }
 
-function performPrint (iframeElement, params) {
+function handleCloseMessage(params) {
+  window.addEventListener('message', function (e) {
+    const origin = e.origin
+    if (origin !== window.location.origin) return
+    if (!e.data.onPrintDialogClose) return
+    params.onPrintDialogClose()
+  }, false)
+}
+
+function performPrint(iframeElement, params) {
+  handleCloseMessage(params)
   try {
     iframeElement.focus()
 
@@ -59,15 +69,15 @@ function performPrint (iframeElement, params) {
       try {
         iframeElement.contentWindow.document.execCommand('print', false, null)
       } catch (e) {
-        setTimeout(function(){
+        setTimeout(function () {
           iframeElement.contentWindow.print()
-        },1000)
+        }, 1000)
       }
     } else {
       // Other browsers
-      setTimeout(function(){
+      setTimeout(function () {
         iframeElement.contentWindow.print()
-      },1000)
+      }, 1000)
     }
   } catch (error) {
     params.onError(error)
@@ -82,7 +92,7 @@ function performPrint (iframeElement, params) {
   }
 }
 
-function loadIframeImages (images) {
+function loadIframeImages(images) {
   const promises = images.map(image => {
     if (image.src && image.src !== window.location.href) {
       return loadIframeImage(image)
@@ -92,7 +102,7 @@ function loadIframeImages (images) {
   return Promise.all(promises)
 }
 
-function loadIframeImage (image) {
+function loadIframeImage(image) {
   return new Promise(resolve => {
     const pollImage = () => {
       !image || typeof image.naturalWidth === 'undefined' || image.naturalWidth === 0 || !image.complete
